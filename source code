@@ -1,0 +1,337 @@
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <string>
+#include <algorithm>
+
+class Product {
+public:
+    int id;
+    std::string name;
+    float price;
+    int stock;
+
+    Product(int id, std::string name, float price, int stock)
+        : id(id), name(name), price(price), stock(stock) {}
+
+    void updateStock(int quantity) {
+        stock -= quantity;
+    }
+};
+
+class Cart {
+public:
+    std::vector<std::shared_ptr<Product>> items;
+
+    void addItem(std::shared_ptr<Product> product) {
+        items.push_back(product);
+    }
+
+    void removeItem(int productId) {
+        items.erase(std::remove_if(items.begin(), items.end(),
+            [productId](std::shared_ptr<Product> p) { return p->id == productId; }), items.end());
+    }
+
+    float calculateTotalPrice() {
+        float total = 0;
+        for (const auto& item : items) {
+            total += item->price;
+        }
+        return total;
+    }
+};
+
+class User {
+public:
+    int id;
+    std::string name;
+    std::string email;
+    std::string password;
+    Cart cart;
+
+    User(int id, std::string name, std::string email, std::string password)
+        : id(id), name(name), email(email), password(password) {}
+
+    void viewCart() {
+        std::cout << "Cart items:\n";
+        for (const auto& item : cart.items) {
+            std::cout << "Product ID: " << item->id << ", Name: " << item->name << ", Price: " << item->price << "\n";
+        }
+    }
+};
+
+class Order {
+public:
+    int orderId;
+    int userId;
+    std::vector<std::shared_ptr<Product>> products;
+    float totalPrice;
+
+    Order(int orderId, int userId, std::vector<std::shared_ptr<Product>> products, float totalPrice)
+        : orderId(orderId), userId(userId), products(products), totalPrice(totalPrice) {}
+
+    void confirmOrder() {
+        std::cout << "Order confirmed! Total Price: " << totalPrice << "\n further information will be send to your email,""\n or can contact person(082134672)";
+    }
+};
+
+class Store {
+public:
+    std::vector<std::shared_ptr<Product>> products;
+
+    void addProduct(std::shared_ptr<Product> product) {
+        products.push_back(product);
+    }
+
+    void removeProduct(int productId) {
+        products.erase(std::remove_if(products.begin(), products.end(),
+            [productId](std::shared_ptr<Product> p) { return p->id == productId; }), products.end());
+    }
+
+    std::vector<std::shared_ptr<Product>> getProducts() {
+        return products;
+    }
+
+    void viewProducts() {
+        std::cout << "Available Products:\n";
+        for (const auto& product : products) {
+            std::cout << "ID: " << product->id << ", Name: " << product->name << ", Price: Rp " << product->price << "k, Stock: " << product->stock << "\n";
+        }
+    }
+};
+
+class Admin {
+public:
+    std::string username;
+    std::string password;
+
+    Admin(std::string username, std::string password)
+        : username(username), password(password) {}
+
+    bool login(const std::string& inputUsername, const std::string& inputPassword) {
+        return username == inputUsername && password == inputPassword;
+    }
+};
+
+class ShoppingApp {
+private:
+    std::vector<std::shared_ptr<User>> users;
+    Store store;
+    Admin admin;
+
+public:
+    ShoppingApp() : admin("admin", "admin123") {
+        // Sample products
+        store.addProduct(std::make_shared<Product>(1, "semen per sak ",100, 1000));
+        store.addProduct(std::make_shared<Product>(2, "keramik lantai per m^2",75, 200));
+         store.addProduct(std::make_shared<Product>(3, "bata merah per 10 biji",8, 200));
+          store.addProduct(std::make_shared<Product>(4, "pasir per kg",4, 2000));
+           store.addProduct(std::make_shared<Product>(5, "seng atap per lembar",55, 2000));
+            store.addProduct(std::make_shared<Product>(6, "baut per ons",15, 200));
+             store.addProduct(std::make_shared<Product>(7, "paku per ons",12, 200));
+              store.addProduct(std::make_shared<Product>(8, "batu kerikil per kg",25, 2000));
+               store.addProduct(std::make_shared<Product>(9, "pipa aw 3/4 per meter",33, 200));
+       
+    }
+
+    void registerUser () {
+        std::string name, email, password;
+        std::cout << "Enter your name: ";
+        std::cin >> name;
+        std::cout << "Enter your email: ";
+        std::cin >> email;
+        std::cout << "Enter your password: ";
+        std::cin >> password;
+
+        int newId = users.size() + 1; // Simple ID generation
+        users.push_back(std::make_shared<User>(newId, name, email, password));
+        std::cout << "User  registered successfully!\n";
+    }
+
+    User* loginUser () {
+        std::string email, password;
+        std::cout << "Enter your email: ";
+        std::cin >> email;
+        std::cout << "Enter your password: ";
+        std::cin >> password;
+
+        for (auto& user : users) {
+            if (user->email == email && user->password == password) {
+                std::cout << "Login successful!\n";
+                return user.get();
+            }
+        }
+        std::cout << "Invalid email or password.\n";
+        return nullptr;
+    }
+
+    bool loginAdmin() {
+        std::string username, password;
+        std::cout << "Enter admin username: ";
+        std::cin >> username;
+        std::cout << "Enter admin password: ";
+        std::cin >> password;
+
+        return admin.login(username, password);
+    }
+
+    void adminMenu() {
+        int choice;
+        do {
+            std::cout << "\nAdmin Menu:\n";
+            std::cout << "1. View Users\n";
+            std::cout << "2. Remove User\n";
+            std::cout << "3. View Products\n";
+            std::cout << "4. Add Product\n";
+            std::cout << "5. Remove Product\n";
+            std::cout << "0. Logout\n";
+            std::cout << "Choose an option: ";
+            std::cin >> choice;
+
+            switch (choice) {
+                case 1:
+                    for (const auto& user : users) {
+                        std::cout << "User  ID: " << user->id << ", Name: " << user->name << ", Email: " << user->email << "\n";
+                    }
+                    break;
+                case 2: {
+                    int userId;
+                    std::cout << "Enter User ID to remove: ";
+                    std::cin >> userId;
+                    users.erase(std::remove_if(users.begin(), users.end(),
+                        [userId](std::shared_ptr<User> u) { return u->id == userId; }), users.end());
+                    std::cout << "User  removed successfully!\n";
+                    break;
+                }
+                case 3:
+                    store.viewProducts();
+                    break;
+                case 4: {
+                    std::string name;
+                    float price;
+                    int stock;
+                    std::cout << "Enter product name: ";
+                    std::cin >> name;
+                    std::cout << "Enter product price: ";
+                    std::cin >> price;
+                    std::cout << "Enter product stock: ";
+                    std::cin >> stock;
+                    int newId = store.getProducts().size() + 1;
+                    store.addProduct(std::make_shared<Product>(newId, name, price, stock));
+                    std::cout << "Product added successfully!\n";
+                    break;
+                }
+                case 5: {
+                    int productId;
+                    std::cout << "Enter Product ID to remove: ";
+                    std::cin >> productId;
+                    store.removeProduct(productId);
+                    std::cout << "Product removed successfully!\n";
+                    break;
+                }
+               
+                case 0:
+                    std::cout << "Logging out...\n";
+                    break;
+                default:
+                    std::cout << "Invalid choice. Please try again.\n";
+            }
+        } while (choice != 0);
+    }
+
+    void userMenu(User* user) {
+        int choice;
+        do {
+            std::cout << "\nUser  Menu:\n";
+            std::cout << "1. View Products\n";
+            std::cout << "2. Add Product to Cart\n";
+            std::cout << "3. View Cart\n";
+            std::cout << "4. Checkout\n";
+            std::cout << "0. Logout\n";
+            std::cout << "Choose an option: ";
+  
+            std::cin >> choice;
+
+            switch (choice) {
+                case 1:
+                    store.viewProducts();
+                    break;
+                case 2: {
+                    int productId;
+                    std::cout << "Enter Product ID to add to cart: ";
+                    std::cin >> productId;
+                    auto products = store.getProducts();
+                    auto it = std::find_if(products.begin(), products.end(),
+                        [productId](std::shared_ptr<Product> p) { return p->id == productId; });
+                    if (it != products.end()) {
+                        user->cart.addItem(*it);
+                        std::cout << "Product added to cart!\n";
+                    } else {
+                        std::cout << "Product not found.\n";
+                    }
+                    break;
+                }
+                case 3:
+                    user->viewCart();
+                    break;
+                case 4: {
+                    float totalPrice = user->cart.calculateTotalPrice();
+                    std::cout << "Total Price: " << totalPrice << "\n";
+                    Order order(1, user->id, user->cart.items, totalPrice);
+                    order.confirmOrder();
+                    user->cart.items.clear(); // Clear cart after checkout
+                    break;
+                }
+                case 0:
+                    std::cout << "Logging out...\n";
+                    break;
+                default:
+                    std::cout << "Invalid choice. Please try again.\n";
+            }
+        } while (choice != 0);
+    }
+
+    void run() {
+        int choice;
+        do {
+            std::cout << "\nWelcome to the Shopping App!\n";
+            std::cout << "1. User Registration\n";
+            std::cout << "2. User Login\n";
+            std::cout << "3. Admin Login\n";
+            std::cout << "0. Exit\n";
+            std::cout << "Choose an option: ";
+            std::cin >> choice;
+
+            switch (choice) {
+                case 1:
+                    registerUser ();
+                    break;
+                case 2: {
+                    User* user = loginUser ();
+                    if (user) {
+                        userMenu(user);
+                    }
+                    break;
+                }
+                case 3:
+                    if (loginAdmin()) {
+                        adminMenu();
+                    } else {
+                        std::cout << "Invalid admin credentials.\n";
+                    }
+                    break;
+                case 0:
+                    std::cout << "Exiting the application...\n";
+                    break;
+                default:
+                    std::cout << "Invalid choice. Please try again.\n";
+            }
+        } while (choice != 0);
+    }
+};
+
+int main() {
+    ShoppingApp app;
+    app.run();
+    return 0;
+}
